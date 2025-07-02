@@ -101,46 +101,54 @@
         <artifactId>avro-maven-plugin</artifactId>
         <version>${project.version}</version>
         <executions>
-          <!-- ESECUZIONI DI TEST DISABILITATE -->
-          <!--
+          <!-- LASCIAMO ATTIVA la generazione di default per i sorgenti principali. -->
           <execution>
-            <id>default</id> ...
-          </execution>
-          <execution>
-            <id>test-schemas</id> ...
-          </execution>
-          -->
-
-          <!-- QUESTA ESECUZIONE VIENE RIATTIVATA perché genera codice sorgente ESSENZIALE -->
-          <execution>
-            <id>mapred-schema</id>
             <phase>generate-sources</phase>
             <goals>
+              <goal>schema</goal>
+              <goal>protocol</goal>
+            </goals>
+          </execution>
+          
+          <!-- DISABILITIAMO solo l'esecuzione che genera sorgenti di TEST -->
+          <!--
+          <execution>
+            <id>test-schemas</id>
+            <phase>generate-test-sources</phase>
+            <goals>
+              <goal>schema</goal>
               <goal>protocol</goal>
             </goals>
             <configuration>
-              <stringType>String</stringType>
-              <includes>
-                <include>**/mapred/tether/*.avpr</include>
-              </includes>
-              <sourceDirectory>${parent.project.basedir}/../../../../share/schemas/</sourceDirectory>
-              <outputDirectory>${project.build.directory}/generated-sources/java</outputDirectory>
+              <testSourceDirectory>${parent.project.basedir}/../../../../share/test/schemas/</testSourceDirectory>
+              <testOutputDirectory>${project.build.directory}/generated-test-sources/java</testOutputDirectory>
             </configuration>
           </execution>
+          -->
         </executions>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
         <executions>
-          <!-- ESECUZIONE DI TEST DISABILITATA -->
+          <!-- DISABILITIAMO l'aggiunta di sorgenti di TEST -->
           <!--
           <execution>
-            <id>add-test-source</id> ...
+            <id>add-test-source</id>
+            <phase>generate-test-sources</phase>
+            <goals>
+              <goal>add-test-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.basedir}/target/generated-test-sources/java</source>
+                <source>${project.basedir}/target/generated-test-sources/avro</source>
+              </sources>
+            </configuration>
           </execution>
           -->
-
-          <!-- QUESTA ESECUZIONE DEVE RIMANERE ATTIVA -->
+          
+          <!-- LASCIAMO ATTIVA l'aggiunta di sorgenti PRINCIPALI -->
           <execution>
             <id>add-source</id>
             <phase>generate-sources</phase>
@@ -150,6 +158,7 @@
             <configuration>
               <sources>
                 <source>${project.basedir}/target/generated-sources/java</source>
+                <source>${project.basedir}/target/generated-sources/avro</source>
               </sources>
             </configuration>
           </execution>
