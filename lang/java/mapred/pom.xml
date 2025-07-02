@@ -101,12 +101,24 @@
         <artifactId>avro-maven-plugin</artifactId>
         <version>${project.version}</version>
         <executions>
+          <!-- 
+            Questa esecuzione (default) fallisce perché cerca src/main/avro.
+            La commentiamo.
+          -->
+          <!--
           <execution>
             <phase>generate-sources</phase>
             <goals>
               <goal>schema</goal>
             </goals>
           </execution>
+          -->
+          
+          <!--
+            Questa esecuzione (test-schemas) cerca file di test.
+            La commentiamo.
+          -->
+          <!--
           <execution>
             <id>test-schemas</id>
             <phase>generate-sources</phase>
@@ -114,13 +126,20 @@
               <goal>schema</goal>
               <goal>protocol</goal>
             </goals>
-            <!-- compile only test protocols and schemas and place them in the classpath. -->
             <configuration>
               <sourceDirectory></sourceDirectory>
               <testSourceDirectory>${parent.project.basedir}/../../../../share/test/schemas/</testSourceDirectory>
               <testOutputDirectory>${project.build.directory}/generated-test-sources/java</testOutputDirectory>
             </configuration>
           </execution>
+          -->
+
+          <!--
+            Questa esecuzione (mapred-schema) è per il codice principale,
+            ma la commentiamo per sicurezza, se non ci sono schemi non serve.
+            Se il build fallisce perché mancano classi generate, la riattiveremo.
+          -->
+          <!--
           <execution>
             <id>mapred-schema</id>
             <phase>generate-sources</phase>
@@ -136,12 +155,18 @@
               <outputDirectory>${project.build.directory}/generated-sources/java</outputDirectory>
             </configuration>
           </execution>
+          -->
         </executions>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
         <executions>
+          <!--
+            Questa esecuzione (add-test-source) aggiunge sorgenti di test.
+            La commentiamo.
+          -->
+          <!--
           <execution>
             <id>add-test-source</id>
             <phase>generate-test-sources</phase>
@@ -155,6 +180,13 @@
               </sources>
             </configuration>
           </execution>
+          -->
+          
+          <!--
+            Questa esecuzione (add-source) aggiunge sorgenti principali.
+            La lasciamo attiva per ora. Se il build fallisce perché non trova
+            le cartelle, commenteremo anche questa.
+          -->
           <execution>
             <id>add-source</id>
             <phase>generate-sources</phase>
@@ -225,4 +257,3 @@
     </dependency>
   </dependencies>
 </project>
-
