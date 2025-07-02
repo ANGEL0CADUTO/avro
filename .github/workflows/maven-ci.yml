@@ -1,35 +1,70 @@
 # Nome del workflow, che apparirà su GitHub
-name: Java CI with Maven
+name: Java CI for Avro
 
 # Trigger: quando eseguire questo workflow
 on:
-  # Esegui per ogni push sul branch 'master' o 'main'
   push:
     branches: [ "master", "main" ]
-  # Esegui anche per le Pull Request verso 'master' o 'main'
   pull_request:
     branches: [ "master", "main" ]
 
 # Lavori da eseguire
 jobs:
   build:
-    # Il tipo di macchina virtuale su cui eseguire il lavoro
+    # Il tipo di macchina virtuale su cui eseguire il lavoro (Linux)
     runs-on: ubuntu-latest
 
     steps:
       # 1. Scarica il codice del tuo repository
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # 2. Imposta l'ambiente Java (JDK 11)
+      # 2. Imposta l'ambiente Java con TUTTI i JDK necessari
       - name: Set up JDK 11
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
-          cache: maven
 
-      # 3. Esegui il build con Maven
-      # Il comando 'clean install' compila il codice e esegue i test
-      - name: Build with Maven
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      
+      - name: Set up JDK 21 (and cache Maven dependencies)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven # La cache la mettiamo solo una volta, sull'ultimo JDK
+
+      # 3. Crea il file toolchains.xml per Maven
+      - name: Configure Maven toolchains
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/toolchains.xml <<EOL
+          <?xml version="1.0" encoding="UTF-8"?>
+          <toolchains>
+            <toolchain>
+              <type>jdk</type>
+              <provides><version>11</version></provides>
+              <configuration><jdkHome>${{ env.JAVA_HOME_11_X64 }}</jdkHome></configuration>
+            </toolchain>
+            <toolchain>
+              <type>jdk</type>
+              <provides><version>17</version></provides>
+              <configuration><jdkHome>${{ env.JAVA_HOME_17_X64 }}</jdkHome></configuration>
+            </toolchain>
+            <toolchain>
+              <type>jdk</type>
+              <provides><version>21</version></provides>
+              <configuration><jdkHome>${{ env.JAVA_HOME_21_X64 }}</jdkHome></configuration>
+            </toolchain>
+          </toolchains>
+          EOL
+
+      # 4. Esegui il build con Maven
+      # Maven ora troverà tutti i JDK di cui ha bisogno grazie al file toolchains.xml
+      - name: Build Avro with Maven
         run: mvn -B clean install
