@@ -415,6 +415,8 @@
               <consoleOutput>true</consoleOutput>
               <excludeSubProjects>false</excludeSubProjects>
               <excludes>
+            	<exclude>**/.gitkeep*</exclude>
+
                 <!-- version control files -->
                 <!-- may not be in the root folder if using git-svn -->
                 <exclude>**/.git/**</exclude>
