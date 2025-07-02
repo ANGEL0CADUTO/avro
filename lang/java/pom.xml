@@ -73,25 +73,16 @@
   </properties>
 
   <modules>
-    <!-- MODULI ESSENZIALI - LI LASCIAMO ATTIVI -->
-    <module>avro</module>
-    <module>compiler</module>
-    <module>tools</module>
-    <module>maven-plugin</module>
-    <module>idl</module>
-
-
-    <!-- 
-      TUTTI GLI ALTRI MODULI VENGONO DISABILITATI
-      perché non sono strettamente necessari per il core di Avro
-      e stanno causando problemi di build.
-    -->
-    
     <module>android</module>
+    <module>avro</module>
+    <module>idl</module>
+    <module>compiler</module>
+    <module>maven-plugin</module>
     <module>ipc</module>
     <module>ipc-jetty</module>
     <module>ipc-netty</module>
     <module>trevni</module>
+    <module>tools</module>
     <module>mapred</module>
     <module>protobuf</module>
     <module>thrift</module>
@@ -100,7 +91,6 @@
     <module>integration-test</module>
     <module>perf</module>
     <module>interop-data-test</module>
-
   </modules>
 
   <build>

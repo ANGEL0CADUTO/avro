@@ -28,32 +28,99 @@
   </parent>
 
   <artifactId>avro-mapred</artifactId>
-  <!-- ... resto delle proprietà ... -->
+
+  <name>Apache Avro Mapred API</name>
+  <description>An org.apache.hadoop.mapred compatible API for using Avro Serialization in Hadoop</description>
+  <packaging>bundle</packaging>
+
+  <properties>
+    <main.basedir>${project.parent.parent.basedir}</main.basedir>
+    <osgi.import>
+      !org.apache.avro.mapred*,
+      org.apache.avro*;version="${project.version}",
+      org.apache.hadoop*,
+      *
+    </osgi.import>
+    <osgi.export>
+      org.apache.avro.mapred*;version="${project.version}",
+      org.apache.avro.hadoop*;version="${project.version}",
+    </osgi.export>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.release>8</maven.compiler.release>
+  </properties>
+
   <build>
     <plugins>
-      <!-- ... altri plugin ... -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Automatic-Module-Name>org.apache.avro.mapred</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+      <!-- Allow guava because hadoop brings it as a transitive dependency. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-banned-dependencies</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <includes>
+                    <exclude>com.google.guava:guava</exclude>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- some IPC tests hang if not run in a separate JVM -->
+          <forkCount>1</forkCount>
+          <reuseForks>false</reuseForks>
+          <parallel>none</parallel>
+          <!-- Required for recent JDKs (fixes "UnsupportedOperationException: getSubject is supported only if a security manager is allowed") -->
+          <argLine>-Djava.security.manager=allow</argLine>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>${project.groupId}</groupId>
         <artifactId>avro-maven-plugin</artifactId>
         <version>${project.version}</version>
         <executions>
-          <!-- ESECUZIONE DI DEFAULT MODIFICATA PER NON FALLIRE -->
           <execution>
-            <id>default-schema</id> <!-- Aggiunto un id per chiarezza -->
             <phase>generate-sources</phase>
             <goals>
               <goal>schema</goal>
             </goals>
+          </execution>
+          <execution>
+            <id>test-schemas</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>schema</goal>
+              <goal>protocol</goal>
+            </goals>
+            <!-- compile only test protocols and schemas and place them in the classpath. -->
             <configuration>
-              <!--
-                TRUCCO: Forniamo una cartella vuota per evitare che il plugin
-                cerchi nelle directory di default e fallisca.
-              -->
-              <sourceDirectory>${project.basedir}/src/main/non-existent-folder/</sourceDirectory>
+              <sourceDirectory></sourceDirectory>
+              <testSourceDirectory>${parent.project.basedir}/../../../../share/test/schemas/</testSourceDirectory>
+              <testOutputDirectory>${project.build.directory}/generated-test-sources/java</testOutputDirectory>
             </configuration>
           </execution>
-          
-          <!-- Esecuzione per i protocolli PRINCIPALI - LASCIATA ATTIVA -->
           <execution>
             <id>mapred-schema</id>
             <phase>generate-sources</phase>
@@ -75,8 +142,6 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
         <executions>
-          <!-- DISABILITIAMO l'aggiunta di sorgenti di TEST -->
-          <!--
           <execution>
             <id>add-test-source</id>
             <phase>generate-test-sources</phase>
@@ -90,9 +155,6 @@
               </sources>
             </configuration>
           </execution>
-          -->
-          
-          <!-- LASCIAMO ATTIVA l'aggiunta di sorgenti PRINCIPALI -->
           <execution>
             <id>add-source</id>
             <phase>generate-sources</phase>
@@ -102,7 +164,6 @@
             <configuration>
               <sources>
                 <source>${project.basedir}/target/generated-sources/java</source>
-                <source>${project.basedir}/target/generated-sources/avro</source>
               </sources>
             </configuration>
           </execution>
@@ -112,6 +173,55 @@
   </build>
 
   <dependencies>
-    <!-- ... le dipendenze rimangono invariate ... -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>avro-ipc</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>avro-ipc-jetty</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>avro-ipc</artifactId>
+      <classifier>tests</classifier>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>avro</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-library</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
+      <!-- hadoop's execution environment provides its own jars, usurping any others.
+        So we should not include it here -->
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.xerial.snappy</groupId>
+        <artifactId>snappy-java</artifactId>
+        <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
